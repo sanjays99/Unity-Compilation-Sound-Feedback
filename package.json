@@ -1,0 +1,10 @@
+{
+  "name": "com.dragon.devtools",
+  "version": "1.0.0",
+  "displayName": "Dragon Dev Tools",
+  "description": "Custom Unity editor compile sound system with error, warning and success feedback.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Dragonfall Interactive"
+  }
+}
