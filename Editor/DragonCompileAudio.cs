@@ -66,11 +66,11 @@ public static class DragonCompileAudio
         if (!DragonPreferences.Enabled)
             return;
 
-        if (hadErrors)
+        if (hadErrors && DragonPreferences.ErrorEnabled)
             Play(DragonPreferences.ErrorOverride ?? errorClip);
-        else if (hadWarnings)
+        else if (hadWarnings && DragonPreferences.WarningEnabled)
             Play(DragonPreferences.WarningOverride ?? warningClip);
-        else
+        else if (!hadErrors && !hadWarnings && DragonPreferences.SuccessEnabled)
             Play(DragonPreferences.SuccessOverride ?? successClip);
     }
 
@@ -78,14 +78,32 @@ public static class DragonCompileAudio
     {
         if (clip == null) return;
 
-        var audioUtil = typeof(Editor).Assembly.GetType("UnityEditor.AudioUtil");
-        var method = audioUtil.GetMethod(
-            "PlayPreviewClip",
-            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
-            null,
-            new Type[] { typeof(AudioClip), typeof(int), typeof(bool) },
-            null);
+        GameObject tempGO = new GameObject("DragonDevTools_AudioPreview");
+        tempGO.hideFlags = HideFlags.HideAndDontSave;
 
-        method?.Invoke(null, new object[] { clip, 0, false });
+        var source = tempGO.AddComponent<AudioSource>();
+        source.clip = clip;
+        source.volume = DragonPreferences.Volume;
+        source.playOnAwake = false;
+        source.spatialBlend = 0f; // 2D sound
+
+        source.Play();
+
+        EditorApplication.update += Update;
+
+        void Update()
+        {
+            if (source == null)
+            {
+                EditorApplication.update -= Update;
+                return;
+            }
+
+            if (!source.isPlaying)
+            {
+                EditorApplication.update -= Update;
+                GameObject.DestroyImmediate(tempGO);
+            }
+        }
     }
 }
